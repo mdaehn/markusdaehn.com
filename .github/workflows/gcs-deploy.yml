@@ -1,0 +1,57 @@
+name: Generate and Deploy markusdaehn.com blog to GCS
+on: 
+  push:
+    branches: 
+      - 'main'
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository 
+        uses: actions/checkout@v3
+
+      - name: Setup NodeJs
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'latest'
+
+      - name: Install Hexo
+        run: npm install -g hexo-cli
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate site
+        run: hexo g
+
+      - name: Upload generated site
+        uses: actions/upload-artifact@v3
+        with:
+          name: generated-site
+          path: ./public
+  deploy:
+    needs: generate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Download generated site
+        uses: actions/download-artifact@v2
+        with:
+          name: generated-site
+          path: ./public
+
+      - name: Authorize GCS using WIF
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: '${{ secrets.GCS_WIF_PROVIDER }}'
+          service_account: '${{ secrets.GCS_SA_EMAIL}}'
+
+      - name: Upload files to GCS
+        uses: 'google-github-actions/upload-cloud-storage@v1'
+        with:
+          path: './public'
+          destination: '${{ secrets.GCS_BUCKET_NAME }}'
+          parent: false
