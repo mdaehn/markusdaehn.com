@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Download generated site
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: generated-site
           path: ./public
@@ -54,4 +54,5 @@ jobs:
         with:
           path: './public'
           destination: '${{ secrets.GCS_BUCKET_NAME }}'
+          process_gcloudignore: false
           parent: false
