@@ -3,15 +3,15 @@ title: Auto Deploy Hexo Blog to Google Cloud Storage Using GitHub Actions
 tags: ["hexo", "blog", "autodeploy", "google cloud storage", "google cloud", "github actions", "github", "workload identity federation", "static site generator"]
 ---
 
+## Introduction
+
+Mainstream blogging platforms (e.g. WordPress) are overly bloated. Most of the time, you want a simple solution without all the fluff. This article describes how to setup a no fluff solution that will appeal to developers. Even if you are not a developer, you may still enjoy this simple approach.
+
 ## Overview 
 
-When starting a blog, you have a plethora of choices; unfortunately, many of the mainstream blogging platforms, such as WordPress, are overly bloated. As a software developer, you don't need all the fluff and would prefer a simple solution that mimics how you write code, from the tooling to the workflow. 
+We use Hexo as our blogging engine, Google Cloud Storage (GCS) to host our blog sit and Github as our version control and backup. We also take advantage of GitHub actions and Google Cloud's Workload Identity Federation (WIF) to auto generate and deploy our static site when the main branch is modified.
 
-If that is you, then you are in the right place. We are going to setup a static blog site using Hexo, use Google Cloud Storage to host it and GitHub as our version control system. We plan to take advantage of GitHub actions and GCS Workload Identity Federation (WIF) to automatically generate our static site and deploy it to GCS.  
-
-As a side note, I chose Hexo because it is developed using nodejs, which is in my wheelhouse, and for its simplicity. It has basic static site generator and plugin architecture. It also has a nice command line interface that allows automation. Hexo's post are simple markdown files, so it allows us to write our blog posts straight from our IDE of choice. In my case, it is Visual Studio Code. 
-
-That said, you don't necessarily have to use Hexo. You can swap it out for any of the many other blog frameworks that support static site generation (e.g. Jekyll), or with any framework, for that mater, that supports static site generation, such as next.js. Similarly, you don't have to use Visual Studio code, and can use what ever you feel comfortable using to edit your files.
+If you are a developer, this process sounds very familiar. The only thing missing is writing our blog post in an IDE like Visual Studio Code, and that is exactly what we plan to do. 
 
 ## Prerequisites
 
