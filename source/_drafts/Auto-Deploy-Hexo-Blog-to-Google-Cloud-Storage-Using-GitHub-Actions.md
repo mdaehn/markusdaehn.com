@@ -5,13 +5,12 @@ tags: ["hexo", "blog", "autodeploy", "google cloud storage", "google cloud", "gi
 
 ## Introduction
 
-Mainstream blogging platforms (e.g. WordPress) are overly bloated. Most of the time, you want a simple solution without all the fluff. This article describes how to setup a no fluff solution that will appeal to developers. Even if you are not a developer, you may still enjoy this simple approach.
+Mainstream blogging platforms, such as WordPress, are bloated and overly complicated. Most of the time, you want a simple solution without all the fluff. This article describes how to setup a no fluff solution that will appeal to software developers. Even if you are not a developer, you may still enjoy this simple approach.
 
 ## Overview 
 
-We use Hexo as our blogging engine, Google Cloud Storage (GCS) to host our blog sit and Github as our version control and backup. We also take advantage of GitHub actions and Google Cloud's Workload Identity Federation (WIF) to auto generate and deploy our static site when the main branch is modified.
+We use Hexo as our blogging engine, Visual Studio Code to edit our blog posts, Google Cloud Storage (GCS) to host our blog site and Github as our version control and backup. We will also take advantage of GitHub actions and Google Cloud's Workload Identity Federation (WIF) to auto generate and deploy our static site whenever a change is made to the main git repository branch. This setup may seem eerily familiar to developers, since it utilizes similar tools and methods in a typical development process.
 
-If you are a developer, this process sounds very familiar. The only thing missing is writing our blog post in an IDE like Visual Studio Code, and that is exactly what we plan to do. 
 
 ## Prerequisites
 
@@ -25,7 +24,33 @@ This article should help you setup Git and Node, "[Setting up your Development E
 
 You will need a [GitHub](https://github.com/) account if you don't already have one and a SSH key added to your account. See this [article](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) for more details.
 
-## Setting up Google Cloud Static Site
+## Setting up Static Site on Google Cloud Storage
+First, lets set up Google Cloud Storage to host our static site. Use the [Hosting a static website using HTTP](https://cloud.google.com/storage/docs/hosting-static-website-http) guide if you want to setup a site with HTTP. If you want to set it up with HTTPS, see [Host a static website](https://cloud.google.com/storage/docs/hosting-static-website). 
+
+
+I am going to summarize the [Hosting a static website using HTTP](https://cloud.google.com/storage/docs/hosting-static-website-http) guide. We can later change it to HTTPS, but I want to keep it simple.
+
+1.  Select or Create Google Cloud Project. [Go to Project Selector](https://console.cloud.google.com/projectselector2/home/dashboard?_ga=2.110679239.399703744.1696799026-977856356.1696799026)
+
+2. Make sure billing is enabled for your project. See [Verify the billing status of your projects](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#console)
+
+3. Goto [Search Console](https://search.google.com/search-console/welcome) and enter top-level domain you plan to use (e.g. markusdaehn.net and not www.markusdaehn.net) and click verify. You need to verify you own the domain. See [Domain ownership verification](https://cloud.google.com/storage/docs/domain-name-verification#verification)
+
+4. Goto your domain name provider (e.g https://domains.google.com/registrar/) and add a `CNAME` resource record for you domain (e.g. markusdaehn.net)
+
+    ```
+    NAME                  TYPE     DATA
+    www                   CNAME    c.storage.googleapis.com.
+    ```
+
+5. Goto [Cloud Storage Buckets page](https://console.cloud.google.com/storage/browser?_ga=2.149114422.1663787659.1696908888-1096239556.1690143603) and create a bucket name with www subdomain (e.g. www.markusdaehn.net) and accept all the defaults. When you click create,  uncheck "Enforce public access prevention on this bucket". 
+
+6. Now we need to make our bucket publicly accessible. While in the Bucket details, select the `Permissions` tab and click the **GRANT ACCESS** button.  In the dialogue that appears, add `allUsers` in the new the **New Principals**, select "Cloud Storage" > "Storage Object Viewer" role, and save. You should get confirmation warning; click **ALLOW PUBLIC ACCESS**.  
+
+
+
+
+## Setting up Workload Identity Federation
 
 ## Setting Up Your Hexo Blog Site
 
@@ -58,6 +83,14 @@ $ hexo new post "Your new post title"
 ```
 
 You might also want to update the config with your site information. See Hexo [config documentations](https://hexo.io/docs/configuration). 
+
+
+
+## Resources
+
+- [How to use Github Actions with Google's Workload Identity Federation](https://www.youtube.com/watch?reload=9&app=desktop&v=ZgVhU5qvK1M)
+- [Host a static website (using HTTPS)](https://cloud.google.com/storage/docs/hosting-static-website)
+- [Hosting a static website using HTTP](https://cloud.google.com/storage/docs/hosting-static-website-http)
 
   
 
