@@ -140,7 +140,7 @@ hexo new post "Your new post title"
 
 This will clean up hexo blog and create a new post named `Your-new-post-title.md` in the `source/_posts` directory. 
 
-In Visual Studio Code, edit your new post `source/_posts/Your-new-post-title.md`. I recommend adding a markdown extension (e.g [markdownlint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)) to VSC to help with writing post. Once you are done, simply git add, commit and push it to GitHub:
+In Visual Studio Code, edit your new post `source/_posts/Your-new-post-title.md`. I recommend adding a markdown extension (e.g [markdownlint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)) to VSC to help with writing posts. Once you are done, simply git add, commit and push it to GitHub:
 
 ```shell
 git add .
@@ -155,9 +155,9 @@ However, if you want to merge in changes to the main branch, but do not want to 
 ```shell
 hexo new draft "Your new post title"
 ```
- This will create the post file in the `source/_drafts` folder, making it not visible until you publish it. 
+ This will create the post file in the `source/_drafts` folder, making it not visible when your site is deployed until you publish it.
 
-And once you ready to make it available to the world, run the `publish` command to move it to the `source/_posts`, and then git add, commit, and push to the main branch:
+Once you ready to make it available to the world, run the `publish` command to move it to the `source/_posts`, and then git add, commit, and push to the main branch to make is visible on your GCS site:
 
 ```shell
 hexo publish draft "Your new post title"
@@ -165,11 +165,34 @@ git add .
 git commit -m "Published 'Your new post title'"
 git push
 ```
-Before we move on, I need to point out that Hexo needs at least one post to be visible to display the site correctly.
+Before we move on, I need to point out that Hexo needs at least one post to be visible to display the site correctly. Since we are deleting the default post, we need to insure there is at least one post that is published.
 
-That said, there are more than one way to skin a cat. You could have utilized a branching strategy per post to control when it is visible, merging the post/feature branch into the main branch when you are ready to make it visible. You can figure out what best suits your needs.
+That said, there are more than one way to skin a cat. You could have utilized a branching strategy per post to control when it is visible, merging the post/feature branch into the main branch when you are ready to make it visible. I leave it to you to figure out the best strategy.
 
-Also, you may want to update Hexo config to add your site information before you deploy it. See Hexo [config documentation](https://hexo.io/docs/configuration). 
+Also, you may want to update Hexo config to add your site information before you deploy it. See Hexo [config documentation](https://hexo.io/docs/configuration). There are also a variety of [themes](https://hexo.io/themes/) and [plugins](https://hexo.io/plugins/) to allow you to customize you site. 
+
+## Create Service Account
+
+## Setting up GCS WIF
+
+We are going to use [Workload Identity Federation (WIF)](https://cloud.google.com/iam/docs/workload-identity-federation) to allow GitHub to deploy your Google Cloud Storage static site. This is a more secure and easy-to-manage alternative  to service account keys that utilizes short-lived access tokens. 
+
+But, before we get started, I wanted to give credit to this great video, [How to use Github Actions with Google's Workload Identity Federation](https://www.youtube.com/watch?reload=9&app=desktop&v=ZgVhU5qvK1M). I adapted their instructions for Cloud Run to target Cloud Storage.
+
+Now that is out of the way, you will first need to enable _IAM Service Account Credentials API_. In the [Google Cloud Console](https://console.cloud.google.com/) search box, type the following in the search field, "IAM Service Account Credentials API". In the dropdown list that appears, you should see "IAM Service Account Credentials API" in the **MARKETPLACE** section. Click it. It should take you to the _IAM Service Account Credentials API_ page. Click the **Enable** button to enable the API for your Google Cloud project.
+
+Next, you need to configure the WIF. Enter "workload identity federation" in the Google Cloud search field and select the "Workload Identity Federation" in the **PRODUCTS & PAGES** section. Once on the page, you need to create an identity provider and pool. 
+
+Click the big blue "Get Started" button. It should open the "New workload provider and pool" screen. Enter "GitHub Actions Cloud Storage" as the name and "github-actions-cloud-storage" as the description and click **Continue** button.
+
+In the "Add a provider to pool"s step, select the "OpenID Connect (OIDC)" provider option, enter "github" in the _Provider name_ field,`https://token.actions.githubusercontent.com` _Issuer (URL)_ field  (See GitHub's [Configuring OpenID Connect in Google Cloud Platform](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-google-cloud-platform) for more detail) and click **Continue** button.
+
+Next, we are going to map some provider attributes sent by Github to Google Clouds attribute in order to grant access to your GitHub repository. In "Configure provider attributes" step, the corresponding "Google 1 *" field should be set to "google.subject"; all you need to do is enter "assertion.sub" in the "OIDC 1 *" field. Now click the "+ ADD MAPPING" button, and enter  "attribute.actor" in both  "Google 2 *" and "OIDC 2 *" fields. Again, click "+ ADD MAPPING" button and enter "attribute.repository" in the "Google 3 *" and "OIDC 3 *" fields.
+
+Now while still in the "Configure provider attributes" step, we need to add a CEL condition to restrict access to only our GitHub repository. Click the "ADD CONDITION" button and enter the following in the "Condition CEL field: `assertion.repository=='mdaehn/markusdaehn.com'`. Make sure you replace `mdaehn/markusdaehn.net` with your repository name, and click the "Save" button.
+ 
+
+One more thing you need to do before your WIF setup is complete. You need to allow the WIF to impersonate the service account you use to deploy your Google Cloud static site. While on the "GitHub Actions Cloud Storage pool details" page, click the "+ GRANT ACCESS" 
 
 ## Resources
 
