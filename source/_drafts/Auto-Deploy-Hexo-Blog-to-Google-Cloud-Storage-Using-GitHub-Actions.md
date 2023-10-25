@@ -171,8 +171,6 @@ That said, there are more than one way to skin a cat. You could have utilized a 
 
 Also, you may want to update Hexo config to add your site information before you deploy it. See Hexo [config documentation](https://hexo.io/docs/configuration). There are also a variety of [themes](https://hexo.io/themes/) and [plugins](https://hexo.io/plugins/) to allow you to customize you site. 
 
-## Create Service Account
-
 ## Setting up GCS WIF
 
 We are going to use [Workload Identity Federation (WIF)](https://cloud.google.com/iam/docs/workload-identity-federation) to allow GitHub to deploy your Google Cloud Storage static site. This is a more secure and easy-to-manage alternative  to service account keys that utilizes short-lived access tokens. 
@@ -192,15 +190,28 @@ Next, we are going to map some provider attributes sent by Github to Google Clou
 Now while still in the "Configure provider attributes" step, we need to add a CEL condition to restrict access to only our GitHub repository. Click the "ADD CONDITION" button and enter the following in the "Condition CEL field: `assertion.repository=='mdaehn/markusdaehn.com'`. Make sure you replace `mdaehn/markusdaehn.net` with your repository name, and click the "Save" button.
  
 
-One more thing you need to do before your WIF setup is complete. You need to allow the WIF to impersonate the service account you use to deploy your Google Cloud static site. While on the "GitHub Actions Cloud Storage pool details" page, click the "+ GRANT ACCESS" 
+## Create Service Account
+
+One more thing you need to do before your WIF setup is complete. You need to create a _Service Account_, which WIF will impersonate, to deploy your static site to the _Google Cloud Storage_ bucket.
+
+While on the "GitHub Actions Cloud Storage pool details" page, click the **`+ GRANT ACCESS`** and then click the **`CREATE A SERVICE ACCOUNT`** action in the drawer that opens. This will open a new "Create service account" window. 
+
+In the "Service account details" section, enter "SA Blog Deployer", or whatever makes sense to you, as the `Service account name`. It should have filled in the `Service account ID *` with "sa-blog-deployer". Also add a description in the `Description` field, and then click **`CREATE AND CONTINUE`** button. 
+
+In the "Grant this service account access to project" section, you need to select two role: "Service Account Token Creator" and "Storage Object Admin". Do this now and click the **`CONTINUE`** button. 
+
+This will take your "Grant users access to this service account" section. We are not going to add any users. Instead, lets go back to your "GitHub Actions Cloud Storage pool details" window and refresh the page and then click **`+ GRANT ACCESS` button again. You should see your "SA Blog Deployer" in the `Service Account` dropdown. Select it and click `SAVE`. A "Configure you application" dialogue should appear, click the "DISMISS". 
+
+
 
 ## Resources
 
 - [How to use GitHub Actions with Google's Workload Identity Federation](https://www.youtube.com/watch?reload=9&app=desktop&v=ZgVhU5qvK1M)
+- [Goodbye Service Account Keys, Hello Workload Identity Federation](https://www.youtube.com/watch?v=XcKT_0kFqBw)
 - [Host a static website (using HTTPS)](https://cloud.google.com/storage/docs/hosting-static-website)
 - [Hosting a static website using HTTP](https://cloud.google.com/storage/docs/hosting-static-website-http)
 - [Adding locally hosted code to GitHub](https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github#about-adding-existing-source-code-to-github)
-
+- [Enabling GitHub Actions with Google Cloud Storage](https://docs.github.com/en/enterprise-server@3.10/admin/github-actions/enabling-github-actions-for-github-enterprise-server/enabling-github-actions-with-google-cloud-storage)
   
 
 
