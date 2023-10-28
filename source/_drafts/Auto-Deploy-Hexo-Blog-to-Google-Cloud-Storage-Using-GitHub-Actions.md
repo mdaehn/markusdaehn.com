@@ -6,6 +6,7 @@ tags: ["hexo", "blog", "autodeploy", "google cloud storage", "google cloud", "gi
 ## Introduction
 
 Mainstream blogging platforms, such as WordPress, are bloated and overly complicated. Most of the time, you want a simple solution without all the fluff. This article describes how to setup a no fluff solution that will appeal to most software developers. Even if you are not a software developer, you may still find this approach useful.
+
 ## Overview 
 
 This solution includes Hexo as your blog engine, Visual Studio Code as your post editor, Google Cloud Storage (GCS) as your site's host and GitHub as your version control and backup. You will also take advantage of GitHub actions and Google Cloud's Workload Identity Federation (WIF) to auto generate and deploy your static site when changes are added (merged or pushed) to your main branch.
@@ -29,10 +30,11 @@ This article should help you setup Git and Node, "[Setting up your Development E
 You will need a [GitHub](https://github.com/) account if you don't already have one and a SSH key added to it. See this [article](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) for more details.
 
 ## Setting up Static Site on Google Cloud Storage
-First, lets set up Google Cloud Storage to host your static site. Use the [Hosting a static website using HTTP](https://cloud.google.com/storage/docs/hosting-static-website-http) guide if you want to setup a site with HTTP. If you want to set it up with HTTPS, see [Host a static website](https://cloud.google.com/storage/docs/hosting-static-website). 
+
+First, lets set up Google Cloud Storage to host your static site. We are going to setup our site without HTTPS, using instructions provided by the guide, [Hosting a static website using HTTP](https://cloud.google.com/storage/docs/hosting-static-website-http); however, if you want to set it up with HTTPS, see [Host a static website](https://cloud.google.com/storage/docs/hosting-static-website). 
 
 
-I am going to summarize the [Hosting a static website using HTTP](https://cloud.google.com/storage/docs/hosting-static-website-http) guide. You can later change it to HTTPS, but I want to keep it simple.
+Below is the condensed version of [Hosting a static website using HTTP](https://cloud.google.com/storage/docs/hosting-static-website-http) guide with instruction specific to our needs. See the article mentioned for more details. 
 
 1.  Select or Create Google Cloud Project. [Go to Project Selector](https://console.cloud.google.com/projectselector2/home/dashboard?_ga=2.110679239.399703744.1696799026-977856356.1696799026)
 
@@ -194,16 +196,91 @@ Now while still in the "Configure provider attributes" step, we need to add a CE
 
 One more thing you need to do before your WIF setup is complete. You need to create a _Service Account_, which WIF will impersonate, to deploy your static site to the _Google Cloud Storage_ bucket.
 
-While on the "GitHub Actions Cloud Storage pool details" page, click the **`+ GRANT ACCESS`** and then click the **`CREATE A SERVICE ACCOUNT`** action in the drawer that opens. This will open a new "Create service account" window. 
+While still on the "GitHub Actions Cloud Storage pool details" page, click the **`+ GRANT ACCESS`** and then click the **`CREATE A SERVICE ACCOUNT`** action in the drawer that opens. This will open a new "Create service account" window. 
 
-In the "Service account details" section, enter "SA Blog Deployer", or whatever makes sense to you, as the `Service account name`. It should have filled in the `Service account ID *` with "sa-blog-deployer". Also add a description in the `Description` field, and then click **`CREATE AND CONTINUE`** button. 
+In the "Service account details" section, enter "SA Blog Deployer" as the `Service account name`, or whatever makes sense to you. It should have filled in the `Service account ID *` with "sa-blog-deployer". Also add a description in the `Description` field, and then click **`CREATE AND CONTINUE`** button. 
 
-In the "Grant this service account access to project" section, you need to select two role: "Service Account Token Creator" and "Storage Object Admin". Do this now and click the **`CONTINUE`** button. 
+In the "Grant this service account access to project" section, you need to select two roles: "Service Account Token Creator" and "Storage Object Admin". Do this now and click the **`CONTINUE`** button. 
 
-This will take your "Grant users access to this service account" section. We are not going to add any users. Instead, lets go back to your "GitHub Actions Cloud Storage pool details" window and refresh the page and then click **`+ GRANT ACCESS` button again. You should see your "SA Blog Deployer" in the `Service Account` dropdown. Select it and click `SAVE`. A "Configure you application" dialogue should appear, click the "DISMISS". 
+This will take your "Grant users access to this service account" section. We are not going to add any users. Instead, lets go back to your "GitHub Actions Cloud Storage pool details" window and refresh the page, so our new service account will show up. Now click **`+ GRANT ACCESS`** button again. You should see your "SA Blog Deployer" in the `Service Account` dropdown. Select it and click `SAVE`. A "Configure you application" dialogue should appear, click the "DISMISS". 
 
+## Setting Up GitHub Actions
 
+Now you have your WIF set up; the last thing to do is setup your GitHub actions to trigger a deployment when changes are made to the main branch of your Blog's repository. 
 
+First, Go to your GitHub project online and click the `Settings` tab. Select `Secret` > `Secrets and variables` > `Actions`, and add the following `Repository secrets`. These will be used in your GitHub Actions Workflow to deploy your site
+
+- **GCS_BUCKET_NAME**: This is the Google Cloud Storage bucket name you created to host your static site. It should be something like this, "www.markusdaehn.com". If you are unsure, you can goto `Cloud Storage` > `Buckets`. You should see it in the list of buckets.
+- **GCS_SA_EMAIL**: This is the email of your _Service Account_ connected to your WIF. Click the green `New repository secret` button, type in "GCS_SA_EMAIL" as `Name *`. Now Goto to `IAM & Admin` > `Service Accounts` and hover over your service account email in the list and click the copy icon that appears. Go back to the "New Secret" window and paste this as the value of `Secret *`
+- GCS_WIF_PROVIDER: This is the WIF GitHub provider and needs to be in the format `project/<project ID>/locations/global/workloadIdentityPools/<workload identity pool name>/providers/<workload identity provider name>`. The easiest way to get this value is to goto the "Workload Identity Pools". Select `IAM & Admin` > `Workload Identity Federation` and select the pool we created. On the page, you will see the `Providers`, click the edit icon near the _github_ provider we created, and copy the URL in the `Default audience`, starting from projects to the end of the URL. Now, go back to the 
+
+Once you got your GitHub secrets setup, open Visual Studio Code, and add a workflow file named `gcs-deploy.yml` in the `.github/workflows` directory of your blog project. Paste the following in it:
+
+```yaml
+name: Generate and Deploy blog to GCS
+on: 
+  push:
+    branches: 
+      - 'main'
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository 
+        uses: actions/checkout@v3
+
+      - name: Setup NodeJs
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'latest'
+
+      - name: Install Hexo
+        run: npm install -g hexo-cli
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate site
+        run: hexo g
+
+      - name: Upload generated site
+        uses: actions/upload-artifact@v3
+        with:
+          name: generated-site
+          path: ./public
+  deploy:
+    needs: generate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Download generated site
+        uses: actions/download-artifact@v3
+        with:
+          name: generated-site
+          path: ./public
+
+      - name: Authorize GCS using WIF
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: '${{ secrets.GCS_WIF_PROVIDER }}'
+          service_account: '${{ secrets.GCS_SA_EMAIL}}'
+
+      - name: Upload files to GCS
+        uses: 'google-github-actions/upload-cloud-storage@v1'
+        with:
+          path: './public'
+          destination: '${{ secrets.GCS_BUCKET_NAME }}'
+          process_gcloudignore: false
+          parent: false
+
+```
+
+Commit and push your changes to your GitHub Repository.
+
+If you go back to GitHub `Actions` online, you will see your workflow running to deploy your site. Wait a few minutes and if everything goes right, your site should be available to the world.
 ## Resources
 
 - [How to use GitHub Actions with Google's Workload Identity Federation](https://www.youtube.com/watch?reload=9&app=desktop&v=ZgVhU5qvK1M)
@@ -212,6 +289,8 @@ This will take your "Grant users access to this service account" section. We are
 - [Hosting a static website using HTTP](https://cloud.google.com/storage/docs/hosting-static-website-http)
 - [Adding locally hosted code to GitHub](https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github#about-adding-existing-source-code-to-github)
 - [Enabling GitHub Actions with Google Cloud Storage](https://docs.github.com/en/enterprise-server@3.10/admin/github-actions/enabling-github-actions-for-github-enterprise-server/enabling-github-actions-with-google-cloud-storage)
+- [About Workflows](https://docs.github.com/en/actions/using-workflows/about-workflows)
+[Enabling keyless authentication from GitHub Actions](https://cloud.google.com/blog/products/identity-security/enabling-keyless-authentication-from-github-actions)
   
 
 
