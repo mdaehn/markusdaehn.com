@@ -1,17 +1,21 @@
 ---
 title: Auto Deploy Hexo Blog to Google Cloud Storage Using GitHub Actions and WIF
+excerpt: This is an excerpt 
 tags:
-  - hexo
-  - blog
-  - auto deploy
-  - google cloud storage
-  - google cloud
-  - github actions
-  - github
-  - workload identity federation
-  - static site generator
-  - github workflow
-  - static site
+  - Hexo
+  - Blog
+  - Auto Deploy
+  - Google Cloud Storage
+  - Google Cloud
+  - GITHub Actions
+  - GITHub
+  - Workload Identity Federation
+  - Static Site Generator
+  - Github Workflow
+  - Static Site
+  - Technology
+categories: 
+- Technology
 date: 2023-10-28 13:59:05
 ---
 
