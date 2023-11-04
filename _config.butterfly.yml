@@ -40,7 +40,7 @@ social:
 # --------------------------------------
 
 # Favicon（網站圖標）
-favicon: /img/favicon.png
+favicon: /images/favicon/favicon.ico
 
 # Avatar (頭像)
 avatar:
@@ -885,8 +885,8 @@ lazyload:
 #   enable: false
 #   manifest: /pwa/manifest.json
 #   apple_touch_icon: /pwa/apple-touch-icon.png
-#   favicon_32_32: /pwa/32.png
-#   favicon_16_16: /pwa/16.png
+#   favicon_32_32: /images/favicon/favicon-16x16.png
+#   favicon_16_16: /images/favicon/favicon-16x16.png
 #   mask_icon: /pwa/safari-pinned-tab.svg
 
 # Open graph meta tags
