@@ -4,9 +4,14 @@
 
 # Site
 title: Markus Daehn
-subtitle: 'A Technical perspective'
+subtitle: 'A Technical Perspective'
 description: ''
-keywords:
+keywords: 
+  - ReactJs
+  - NodeJs
+  - GitHub
+  - Google Cloud
+  - GitHub Workflow
 author: Markus Daehn
 language: en
 timezone: 'America/Los_Angeles'
