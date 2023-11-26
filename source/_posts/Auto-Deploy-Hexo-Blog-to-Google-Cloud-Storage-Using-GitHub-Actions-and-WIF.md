@@ -299,6 +299,32 @@ jobs:
 Commit and push your changes to your GitHub Repository.
 
 If you go back to GitHub `Actions` online, you will see your workflow running to deploy your site. Wait a few minutes and if everything goes right, your site should be available to the world.
+
+## Add HTTPS Support
+
+There is an added benefit of HTTPS, besides security; Google uses it as a [ranking signal](https://developers.google.com/search/blog/2014/08/https-as-ranking-signal), although there have been indications that Google is moving away signaling and re-focusing on content. 
+
+If you want to add HTTPS, which incurs additional cost, follow the instruction in ["Set up your load balancer and SSL certificate"](https://cloud.google.com/storage/docs/hosting-static-website#lb-ssl) section of [Host a static website](https://cloud.google.com/storage/docs/hosting-static-website). 
+
+Make sure you enable `Compute Engine API` before going through the instructions, else you will receive this confusing  error:
+
+> There was an error while loading /net-services/loadbalancing/httpAdvanced/add?project=your-project-id. Please try again.
+It may be a browser or network issue. Go to the loading issues help page to troubleshoot the issue. 
+
+Here is the link to the `Compute Engine API`: 
+
+> `https://console.cloud.google.com/apis/api/compute.googleapis.com/metrics?project=<your-project-id>`
+`
+
+Also, you will need to remove the DNS records you added when you verified your domain and CNAME. It should look something like this, where the IP is the IP of you load balancer: 
+
+
+    ```
+    NAME                  TYPE     DATA
+    www                   A        34.107.239.167
+    www.markusdaehn.com   A        34.107.239.167
+    ```
+
 ## Resources
 
 - [How to use GitHub Actions with Google's Workload Identity Federation](https://www.youtube.com/watch?reload=9&app=desktop&v=ZgVhU5qvK1M)
@@ -308,7 +334,7 @@ If you go back to GitHub `Actions` online, you will see your workflow running to
 - [Adding locally hosted code to GitHub](https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github#about-adding-existing-source-code-to-github)
 - [Enabling GitHub Actions with Google Cloud Storage](https://docs.github.com/en/enterprise-server@3.10/admin/github-actions/enabling-github-actions-for-github-enterprise-server/enabling-github-actions-with-google-cloud-storage)
 - [About Workflows](https://docs.github.com/en/actions/using-workflows/about-workflows)
-[Enabling keyless authentication from GitHub Actions](https://cloud.google.com/blog/products/identity-security/enabling-keyless-authentication-from-github-actions)
+- [Enabling keyless authentication from GitHub Actions](https://cloud.google.com/blog/products/identity-security/enabling-keyless-authentication-from-github-actions)
   
 
 
